@@ -59,7 +59,8 @@ local function drawExisting()
         ClientBridge.drawText3d(vector3(station.x, station.y, station.z + 0.25), StationKinds[station.kind] and StationKinds[station.kind].label or station.kind)
     end
     for _, door in ipairs(mine(Client.world.doors)) do
-        ClientBridge.drawText3d(vector3(door.x, door.y, door.z + 1.0), door.pairId and 'Door (double)' or 'Door')
+        local label = door.pairId and 'Double door' or 'Door'
+        ClientBridge.drawText3d(vector3(door.x, door.y, door.z + 1.0), ('%s: %s'):format(label, Doors.status(door.id)))
     end
 end
 
