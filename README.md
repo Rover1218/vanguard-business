@@ -14,7 +14,7 @@ Works with **QBCore**, **Qbox** and **ESX** (auto-detected). Companion to Vangua
 - **Boss desk** — balance, deposit / withdraw, money log, team, hiring, supplier orders paid from the business account and delivered to the fridge.
 - **Cooking** — each station shows what it can make, what you have and what's missing. Cook up to 10 at once. Walk away or cancel and the ingredients come back.
 - **Cash register** — bill a customer at the counter; they pay cash or bank from a receipt pop-up. The employee gets a commission.
-- **Door locks** — only staff of that business (and admins) can lock or unlock its doors.
+- **Door locks** — staff walk up to a door and press **E** to lock or unlock it (or use third-eye with `Config.DoorsUseTarget`). Everyone else sees "Locked". Locks are re-applied continuously, so interiors can't leave a locked door swinging.
 - **Food & drink** — 26 products and 21 ingredients with pictures. Every item has its own hunger / thirst value (100 = completely full).
 - **Server-checked** — every action re-checks distance to the station, rank, permission and shift on the server. Balances can never go negative, even when two people spend at once.
 
@@ -53,7 +53,7 @@ Works with **QBCore**, **Qbox** and **ESX** (auto-detected). Companion to Vangua
    |---|---|
    | ← → | change what you're placing (fridge, coffee machine, grill, register, boss desk, clock-in, door, map icon) |
    | Click | place it (for doors: aim at the door) |
-   | Shift + Click | second half of a double door |
+   | Shift + Click | second half of a double door (add both halves, or the other half stays open) |
    | Mouse wheel | rotate |
    | Delete | remove the station / door you're aiming at |
    | Backspace | done |

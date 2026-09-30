@@ -9,8 +9,10 @@ Config.Command = 'business'                -- /business: your jobs, and the admi
 Config.AdminAce = 'vanguard.business.admin' -- server.cfg: add_ace group.admin vanguard.business.admin allow
 Config.OwnersCanPlace = false              -- true = business Owners may place their own stations
 
-Config.UseTarget = true -- use ox_target / qb-target (Left Alt) when running; false = always [E] prompts
-Config.PromptKey = 38   -- E, for the [E] prompts
+Config.UseTarget = true        -- stations: ox_target / qb-target (Left Alt) when running; false = [E] prompts
+Config.DoorsUseTarget = false  -- doors: false = walk up and press E to lock / unlock; true = third-eye
+Config.PromptKey = 38          -- E, for station prompts
+Config.DoorKey = 38            -- E, for doors
 
 -- ---------------------------------------------------------------------------
 -- Rules
