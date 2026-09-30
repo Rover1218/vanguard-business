@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vanguard Business</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main id="app" hidden aria-label="Vanguard Business">
+        <header class="bar">
+            <div class="brand">
+                <div class="brand-mark" id="brand-mark" aria-hidden="true">V</div>
+                <div class="brand-text">
+                    <strong id="brand-title">VANGUARD</strong>
+                    <small id="brand-subtitle">BUSINESS</small>
+                </div>
+            </div>
+            <div class="bar-title">
+                <small id="page-kicker"></small>
+                <h1 id="page-title"></h1>
+            </div>
+            <button class="icon-button" id="close" type="button" aria-label="Close">&times;</button>
+        </header>
+        <section id="page" class="page"></section>
+    </main>
+
+    <div id="progress" class="progress" hidden>
+        <span id="progress-label"></span>
+        <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+        <small>Press <kbd>X</kbd> to cancel</small>
+    </div>
+
+    <div id="placement" class="placement" hidden>
+        <div class="placement-head">
+            <small>PLACING FOR <span id="placement-business"></span></small>
+            <strong><span class="arrow">&lsaquo;</span> <span id="placement-kind"></span> <span class="arrow">&rsaquo;</span></strong>
+            <small id="placement-count"></small>
+        </div>
+        <ul class="placement-keys">
+            <li><kbd>&larr;</kbd><kbd>&rarr;</kbd> change</li>
+            <li><kbd>Click</kbd> place</li>
+            <li><kbd>Wheel</kbd> rotate</li>
+            <li><kbd>Delete</kbd> remove</li>
+            <li id="placement-pair" hidden><kbd>Shift</kbd>+<kbd>Click</kbd> link double door</li>
+            <li><kbd>Backspace</kbd> done</li>
+        </ul>
+    </div>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
