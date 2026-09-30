@@ -10,12 +10,15 @@ local function rankLabels()
     return labels
 end
 
-local function staffView(businessId)
+--- Team list. Character ids are only sent to ranks that can hire / fire (they need them to act).
+local function staffView(businessId, viewer, canManage)
     local list = StaffList.members(businessId)
     for _, member in ipairs(list) do
         local src = Bridge.sourceFromIdentifier(member.identifier)
         member.online = src ~= nil
         member.onDuty = src ~= nil and StaffList.dutyOf(src) == businessId
+        member.isMe = member.identifier == viewer
+        if not canManage then member.identifier = nil end
     end
     return list
 end
@@ -32,11 +35,10 @@ Router.on('bossData', function(src, data)
             typeLabel = (BusinessTypes[business.type] or {}).label or business.type,
             balance = permissions.log and business.balance or nil,
         },
-        me = ctx.identifier,
         rank = ctx.rank,
         permissions = permissions,
         ranks = rankLabels(),
-        staff = staffView(business.id),
+        staff = staffView(business.id, ctx.identifier, permissions.hire == true),
         onDuty = StaffList.onDutyCount(business.id),
         log = permissions.log and Businesses.history(business.id, LOG_LIMIT) or nil,
         catalog = permissions.supplier and Types.catalog(business.type) or nil,
@@ -117,6 +119,10 @@ Router.on('hire', function(src, data)
     local target = Rules.wholeNumber(data.target, 1, 2 ^ 31)
     if not target or not GetPlayerName(target) then return Router.fail('No player with that server ID') end
     if target == src then return Router.fail('You already work here') end
+    local station = ctx.station
+    if Access.distanceTo(target, station.x, station.y, station.z) > NEARBY_RANGE then
+        return Router.fail('The new hire must be here at the boss desk')
+    end
     local identifier = Bridge.identifier(target)
     if not identifier then return Router.fail('That player has no character loaded') end
     if StaffList.rankOf(business.id, identifier) then return Router.fail('They already work here') end

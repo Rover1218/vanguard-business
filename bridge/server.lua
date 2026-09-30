@@ -33,8 +33,18 @@ function Bridge.init()
     end
 
     if not started('oxmysql') then return false, 'oxmysql is not running' end
+    if Bridge.inventory == 'ox' then Bridge.guardStashes() end
     return true
 end
+
+--- QBCore hands out a copy of its core object; take a fresh one after items or jobs change.
+function Bridge.refreshCore()
+    if Bridge.framework == 'qb' then core = exports['qb-core']:GetCoreObject() end
+end
+
+AddEventHandler('QBCore:Server:UpdateObject', function()
+    if source == '' then Bridge.refreshCore() end
+end)
 
 -- ---------------------------------------------------------------------------
 -- Players
@@ -172,8 +182,25 @@ function Bridge.registerStash(id, label, slots, weight)
     end
 end
 
+-- ox_inventory lets clients ask to open any registered stash by name, so business fridges only
+-- open right after the server allowed it (openFridge checks station, rank and shift first).
+local STASH_GRANT_MS = 3000
+local stashGrants = {} -- server id -> { id, expires }
+
+function Bridge.guardStashes()
+    exports.ox_inventory:registerHook('openInventory', function(payload)
+        local grant = stashGrants[payload.source]
+        return grant ~= nil and grant.id == payload.inventoryId and GetGameTimer() <= grant.expires
+    end, { inventoryFilter = { '^vbiz_%d+$' } })
+end
+
+AddEventHandler('playerDropped', function()
+    stashGrants[source] = nil
+end)
+
 function Bridge.openStash(src, id)
     if Bridge.inventory == 'ox' then
+        stashGrants[src] = { id = id, expires = GetGameTimer() + STASH_GRANT_MS }
         exports.ox_inventory:forceOpenInventory(src, 'stash', id)
         return
     end

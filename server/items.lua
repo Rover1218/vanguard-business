@@ -6,6 +6,7 @@ Items = {}
 
 local FINISH_TOLERANCE_MS = 750
 local eating = Pending.new() -- key: server id
+local addedDefinitions = {}  -- items this resource added to QBCore (sent to players who join later)
 
 local function definition(name, item, usable)
     return {
@@ -27,18 +28,30 @@ function Items.register()
     end
 
     local added, kept = 0, 0
-    for name, item in pairs(Ingredients) do
-        if Bridge.addItemDefinition(name, definition(name, item, false)) then added = added + 1 else kept = kept + 1 end
-    end
-    for name, item in pairs(Products) do
-        if Bridge.addItemDefinition(name, definition(name, item, true)) then
+    local function add(name, def)
+        if Bridge.addItemDefinition(name, def) then
+            addedDefinitions[name] = def
             added = added + 1
+            return true
+        end
+        kept = kept + 1
+        return false
+    end
+    for name, item in pairs(Ingredients) do add(name, definition(name, item, false)) end
+    for name, item in pairs(Products) do
+        if add(name, definition(name, item, true)) then
             Bridge.createUsable(name, function(src) Items.use(src, name) end)
-        else
-            kept = kept + 1
         end
     end
+    Bridge.refreshCore()
     print(('[vanguard-business] items: %d added, %d already existed and were kept'):format(added, kept))
+end
+
+--- QBCore only sends runtime-added items to players online at that moment; this covers later joins.
+function Items.syncTo(src)
+    if next(addedDefinitions) then
+        TriggerClientEvent('QBCore:Client:OnSharedUpdateMultiple', src, 'Items', addedDefinitions)
+    end
 end
 
 function Items.use(src, name)

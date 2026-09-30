@@ -4,10 +4,22 @@
 Register = {}
 
 local NOTE_MAX = 60
-local bills = Pending.new() -- key: customer server id
+local REBILL_COOLDOWN_MS = 15000 -- after a decline or expiry, the same staff member waits before billing that customer again
+local bills = Pending.new()      -- key: customer server id
+local cooldowns = {}             -- 'biller:customer' -> time the next bill is allowed
 
 local function billerOnline(bill)
     return GetPlayerName(bill.from) ~= nil and Bridge.identifier(bill.from) == bill.fromIdentifier
+end
+
+--- Commission only goes to a biller who is still online, still the same character and still allowed to bill.
+local function billerEarnsCommission(bill)
+    return billerOnline(bill)
+        and Rules.can(Config.RankPermissions, StaffList.rankOf(bill.businessId, bill.fromIdentifier), 'register')
+end
+
+local function startCooldown(bill, customer)
+    cooldowns[('%d:%d'):format(bill.from, customer)] = GetGameTimer() + REBILL_COOLDOWN_MS
 end
 
 local function tellBiller(bill, message, ok)
@@ -25,6 +37,11 @@ Router.on('billCreate', function(src, data)
         return Router.fail('The customer must be at the register')
     end
     if not Bridge.identifier(target) then return Router.fail('That customer has no character loaded') end
+    local cooldownKey = ('%d:%d'):format(src, target)
+    if cooldowns[cooldownKey] and GetGameTimer() < cooldowns[cooldownKey] then
+        return Router.fail('Give the customer a moment before billing again')
+    end
+    cooldowns[cooldownKey] = nil
 
     local amount = Rules.wholeNumber(data.amount, 1, Config.MaxBill)
     if not amount then return Router.fail(('Enter an amount from $1 to $%d'):format(Config.MaxBill)) end
@@ -51,11 +68,15 @@ Router.on('billAnswer', function(src, data)
 
     local bill, reason, expired = bills:finish(src, data.billId, GetGameTimer(), 0)
     if not bill then
-        if expired then tellBiller(expired, 'The bill expired', false) end
+        if expired then
+            startCooldown(expired, src)
+            tellBiller(expired, 'The bill expired', false)
+        end
         return Router.fail(expired and 'That bill expired' or 'That bill is no longer open')
     end
 
     if method == 'decline' then
+        startCooldown(bill, src)
         tellBiller(bill, ('%s declined the bill'):format(Bridge.characterName(src)), false)
         return Router.ok('Bill declined')
     end
@@ -66,11 +87,17 @@ Router.on('billAnswer', function(src, data)
         return Router.fail(('You don\'t have $%d in %s'):format(bill.amount, method))
     end
 
+    -- The business is credited first; if that fails the customer gets their money back.
     local share, commission = Rules.splitBill(bill.amount, Config.CommissionPercent)
-    if commission == 0 or not billerOnline(bill) or not Bridge.addMoney(bill.from, 'bank', commission, 'vanguard-business commission') then
+    if commission == 0 or not billerEarnsCommission(bill) then share, commission = bill.amount, 0 end
+    if not Businesses.adjust(bill.businessId, share) then
+        Bridge.addMoney(src, method, bill.amount, 'vanguard-business bill refund')
+        return Router.fail('The payment failed - your money was returned')
+    end
+    if commission > 0 and not Bridge.addMoney(bill.from, 'bank', commission, 'vanguard-business commission') then
+        Businesses.adjust(bill.businessId, commission)
         share, commission = bill.amount, 0
     end
-    Businesses.adjust(bill.businessId, share)
     Businesses.log(bill.businessId, 'sale', share, bill.fromName, bill.note)
 
     tellBiller(bill, commission > 0
@@ -95,9 +122,14 @@ end
 CreateThread(function()
     while true do
         Wait(5000)
-        for _, entry in ipairs(bills:expire(GetGameTimer())) do
+        local now = GetGameTimer()
+        for _, entry in ipairs(bills:expire(now)) do
+            startCooldown(entry.data, entry.key)
             TriggerClientEvent('vanguard-business:billClosed', entry.key)
             tellBiller(entry.data, 'The bill expired', false)
+        end
+        for key, allowedAt in pairs(cooldowns) do
+            if now >= allowedAt then cooldowns[key] = nil end
         end
     end
 end)

@@ -24,6 +24,9 @@ Config.CommissionPercent = 10   -- share of each paid bill for the employee who 
 Config.MaxTransaction = 1000000 -- max single deposit / withdraw
 Config.MaxStaff = 30
 Config.MaxBusinesses = 100
+Config.MaxStationsPerBusiness = 40
+Config.MaxDoorsPerBusiness = 20
+Config.OwnerDoorRadius = 40.0   -- Owners (when allowed to place) may only add doors this close to their own stations
 Config.MaxCookQuantity = 10
 Config.MaxPacksPerLine = 50
 Config.Stash = { slots = 50, weight = 250000 } -- fridge size (weight in grams)

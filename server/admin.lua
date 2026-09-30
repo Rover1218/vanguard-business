@@ -146,6 +146,9 @@ Router.on('placeStation', function(src, data)
         if kind == data.kind then allowed = true end
     end
     if not allowed then return Router.fail('This business can\'t have that station') end
+    if #Stations.forBusiness(business.id).stations >= Config.MaxStationsPerBusiness then
+        return Router.fail(('Station limit reached (%d)'):format(Config.MaxStationsPerBusiness))
+    end
 
     if not Stations.add(business.id, data.kind, coords, heading) then return Router.fail('Could not save the station') end
     Stations.broadcast()
@@ -178,10 +181,24 @@ Router.on('addDoor', function(src, data)
     if not coords or not model then return Router.fail('Aim at a door') end
     if not nearEnough(src, coords) then return Router.fail('Stand closer to the door') end
 
-    for _, door in ipairs(Stations.forBusiness(business.id).doors) do
-        if door.model == model and #(vector3(door.x, door.y, door.z) - vector3(coords.x, coords.y, coords.z)) < DOOR_DUPLICATE then
+    local placed = Stations.forBusiness(business.id)
+    if #placed.doors >= Config.MaxDoorsPerBusiness then
+        return Router.fail(('Door limit reached (%d)'):format(Config.MaxDoorsPerBusiness))
+    end
+    local position = vector3(coords.x, coords.y, coords.z)
+    for _, door in ipairs(placed.doors) do
+        if door.model == model and #(vector3(door.x, door.y, door.z) - position) < DOOR_DUPLICATE then
             return Router.fail('That door is already added')
         end
+    end
+
+    -- Owners may only lock doors of their own place, never someone else's (e.g. the hospital).
+    if not Access.isAdmin(src) then
+        local nearOwnStation = false
+        for _, station in ipairs(placed.stations) do
+            if #(vector3(station.x, station.y, station.z) - position) <= Config.OwnerDoorRadius then nearOwnStation = true end
+        end
+        if not nearOwnStation then return Router.fail('Place your stations first - doors must be near them') end
     end
 
     local pairId = nil

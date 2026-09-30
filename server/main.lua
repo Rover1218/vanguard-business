@@ -29,15 +29,35 @@ RegisterNetEvent('vanguard-business:hello', function()
     local now = GetGameTimer()
     if not Bridge.ready or (lastHello[src] and now - lastHello[src] < HELLO_COOLDOWN_MS) then return end
     lastHello[src] = now
+    Items.syncTo(src)
     Stations.broadcast(src)
     Access.sendJobs(src)
 end)
 
-AddEventHandler('playerDropped', function()
-    local src = source
-    lastHello[src] = nil
+--- Ends everything tied to the current character: shift, cooking (ingredients go to the fridge),
+--- bills and eating. Runs on disconnect and on character logout, so nothing carries to another character.
+local function endSession(src)
     StaffList.setDuty(src, nil)
     Cooking.drop(src)
     Register.drop(src)
     Items.drop(src)
+end
+
+AddEventHandler('playerDropped', function()
+    local src = source
+    lastHello[src] = nil
+    endSession(src)
+end)
+
+-- Character logout without disconnecting (multicharacter). Raised by the framework on the server;
+-- a player can at most end their own session.
+local function isOwnLogout(eventSource, src)
+    return tonumber(src) ~= nil and (eventSource == '' or tonumber(eventSource) == tonumber(src))
+end
+AddEventHandler('QBCore:Server:OnPlayerUnload', function(src)
+    if isOwnLogout(source, src) then endSession(tonumber(src)) end
+end)
+
+AddEventHandler('esx:playerLogout', function(src)
+    if isOwnLogout(source, src) then endSession(tonumber(src)) end
 end)

@@ -278,7 +278,7 @@ function renderBossStaff(p) {
     const ranks = assignableRanks(p);
 
     const rows = p.staff.map((member) => {
-        const manageable = canHire && member.identifier !== p.me && member.rank < p.rank;
+        const manageable = canHire && !member.isMe && member.rank < p.rank;
         const rankControl = manageable
             ? el('select', {
                 class: 'input small',
@@ -289,7 +289,7 @@ function renderBossStaff(p) {
         return el('li', { class: 'row' },
             el('span', { class: `dot${member.onDuty ? ' is-on' : member.online ? ' is-online' : ''}`, title: member.onDuty ? 'On shift' : member.online ? 'Online' : 'Offline' }),
             el('strong', { class: 'row-name', text: member.name }),
-            member.identifier === p.me ? el('span', { class: 'chip is-you', text: 'YOU' }) : null,
+            member.isMe ? el('span', { class: 'chip is-you', text: 'YOU' }) : null,
             rankControl, fire);
     });
 
@@ -497,12 +497,12 @@ const Preview = {
         ],
     },
     boss: {
-        stationId: 3, me: 'ROV123', rank: 4,
+        stationId: 3, rank: 4,
         business: { id: 1, name: 'Cat Café', typeLabel: 'Cat café', balance: 18450 },
         permissions: { cook: true, fridge: true, doors: true, register: true, supplier: true, hire: true, log: true, withdraw: true },
         ranks: ['Trainee', 'Staff', 'Manager', 'Owner'], onDuty: 2, canPlace: true, maxPacks: 50, maxTransaction: 1000000,
         staff: [
-            { identifier: 'ROV123', name: 'Rover Op', rank: 4, online: true, onDuty: true },
+            { identifier: 'ROV123', name: 'Rover Op', rank: 4, online: true, onDuty: true, isMe: true },
             { identifier: 'MIA555', name: 'Mia Tanaka', rank: 3, online: true, onDuty: true },
             { identifier: 'JAY777', name: 'Jay Park', rank: 1, online: false, onDuty: false },
         ],

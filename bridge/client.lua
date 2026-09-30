@@ -91,3 +91,8 @@ end)
 -- Ask the server for our jobs whenever a character loads.
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function() TriggerServerEvent('vanguard-business:hello') end)
 RegisterNetEvent('esx:playerLoaded', function() TriggerServerEvent('vanguard-business:hello') end)
+
+-- Logged out to character selection: forget the old character's jobs until the next one loads.
+local function forgetJobs() TriggerEvent('vanguard-business:jobs', { jobs = {}, admin = Client.admin }) end
+RegisterNetEvent('QBCore:Client:OnPlayerUnload', forgetJobs)
+RegisterNetEvent('esx:onPlayerLogout', forgetJobs)

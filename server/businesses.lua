@@ -64,10 +64,15 @@ end
 
 --- Adds delta (negative to spend) unless the balance would drop below zero.
 --- Atomic in SQL, so two people spending at once can never overdraw.
+--- Never throws: a database error counts as "not changed" so callers can refund.
 function Businesses.adjust(id, delta)
-    local changed = MySQL.update.await(
+    local ok, changed = pcall(MySQL.update.await,
         'UPDATE vbiz_businesses SET balance = balance + ? WHERE id = ? AND balance + ? >= 0',
         { delta, id, delta })
+    if not ok then
+        print(('[vanguard-business] balance change of %d for business %d failed: %s'):format(delta, id, tostring(changed)))
+        return false
+    end
     if changed ~= 1 then return false end
     local business = cache[id]
     if business then business.balance = business.balance + delta end

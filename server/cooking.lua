@@ -15,7 +15,8 @@ local function giveBack(src, job)
         local returned = src and Bridge.addItem(src, item, amount)
         if not returned and stashId then returned = Bridge.addItem(stashId, item, amount) end
         if not returned then
-            print(('[vanguard-business] could not return %dx %s from station %s'):format(amount, item, tostring(station and station.id)))
+            print(('^3[vanguard-business] LOST INGREDIENTS: %dx %s for character %s (business %s, station %s) - player and fridge were full; give them back by hand^0')
+                :format(amount, item, tostring(job.identifier), tostring(job.businessId), tostring(station and station.id)))
         end
     end
 end
@@ -67,14 +68,17 @@ Router.on('cookStart', function(src, data)
     local taken = {}
     for item, perUnit in pairs(recipe.ingredients) do
         if not Bridge.removeItem(src, item, perUnit * quantity) then
-            giveBack(src, { stationId = ctx.station.id, businessId = ctx.business.id, taken = taken })
+            giveBack(src, { stationId = ctx.station.id, businessId = ctx.business.id, identifier = ctx.identifier, taken = taken })
             return Router.fail('Could not take the ingredients')
         end
         taken[item] = perUnit * quantity
     end
 
     local duration = Rules.cookTime(recipe, quantity)
-    local job = { recipe = recipeId, quantity = quantity, stationId = ctx.station.id, businessId = ctx.business.id, taken = taken }
+    local job = {
+        recipe = recipeId, quantity = quantity, stationId = ctx.station.id, businessId = ctx.business.id,
+        identifier = ctx.identifier, taken = taken,
+    }
     local jobId = jobs:start(src, job, GetGameTimer(), duration, duration + EXPIRE_AFTER_MS)
     return Router.ok(nil, {
         jobId = jobId, duration = duration,
@@ -95,6 +99,10 @@ Router.on('cookFinish', function(src, data)
     if not station or Access.distanceTo(src, station.x, station.y, station.z) > Config.InteractDistance + 1.5 then
         giveBack(src, job)
         return Router.fail('You left the station - ingredients returned')
+    end
+    if not Rules.can(Config.RankPermissions, StaffList.rankOf(job.businessId, Bridge.identifier(src)), 'cook') then
+        giveBack(src, job)
+        return Router.fail('You no longer work here - ingredients returned')
     end
 
     local amount = Recipes[job.recipe].amount * job.quantity

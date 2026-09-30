@@ -3,7 +3,7 @@
 StaffList = {}
 
 local members = {} -- businessId -> identifier -> { name, rank }
-local duty = {}    -- server id -> businessId (memory only; ends on disconnect or restart)
+local duty = {}    -- server id -> businessId (memory only; ends on disconnect, logout or restart)
 
 function StaffList.load()
     members = {}
@@ -19,17 +19,19 @@ function StaffList.rankOf(businessId, identifier)
     return entry and entry.rank or nil
 end
 
+-- Memory changes first, then the database: every check reads memory, so two requests racing
+-- during the database wait (fire vs promote, two hires past the staff limit) see each other.
 function StaffList.set(businessId, identifier, name, rank)
+    members[businessId] = members[businessId] or {}
+    members[businessId][identifier] = { name = name, rank = rank }
     MySQL.query.await(
         'INSERT INTO vbiz_staff (business_id, identifier, name, `rank`) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), `rank` = VALUES(`rank`)',
         { businessId, identifier, name, rank })
-    members[businessId] = members[businessId] or {}
-    members[businessId][identifier] = { name = name, rank = rank }
 end
 
 function StaffList.remove(businessId, identifier)
-    MySQL.query.await('DELETE FROM vbiz_staff WHERE business_id = ? AND identifier = ?', { businessId, identifier })
     if members[businessId] then members[businessId][identifier] = nil end
+    MySQL.query.await('DELETE FROM vbiz_staff WHERE business_id = ? AND identifier = ?', { businessId, identifier })
 end
 
 --- Drops a deleted business from memory (its rows were removed by the foreign key).
