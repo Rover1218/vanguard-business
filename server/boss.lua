@@ -44,7 +44,9 @@ Router.on('bossData', function(src, data)
         catalog = permissions.supplier and Types.catalog(business.type) or nil,
         maxPacks = Config.MaxPacksPerLine,
         maxTransaction = Config.MaxTransaction,
-        canPlace = Access.canPlace(src, business.id),
+        -- Stations and doors are placed from /business by admins; the boss desk only offers it to
+        -- Owners when the server allows that (Config.OwnersCanPlace), never to other staff.
+        canPlace = Config.OwnersCanPlace and ctx.rank == Rules.RANK.OWNER,
         paychecks = Config.Paycheck.Enabled and {
             amounts = Config.Paycheck.Amounts,
             minutes = Config.Paycheck.IntervalMinutes,
