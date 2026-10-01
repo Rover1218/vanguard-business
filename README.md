@@ -11,6 +11,7 @@ Works with **QBCore**, **Qbox** and **ESX** (auto-detected). Companion to Vangua
 - **Six starter types** — coffee shop, cat café, burger bar, pizzeria, bakery, bar. Any type fits any building; add your own in `shared/types.lua`.
 - **Placement tool** — aim and click to place the fridge, cooking stations, cash register, boss desk, clock-in point, doors (incl. double doors) and a map icon. Move or delete them the same way.
 - **Staff & ranks** — Trainee, Staff, Manager, Owner, each with its own permissions (`config.lua`). You can only hire, fire or promote people below you. Clock in to work.
+- **Paychecks** — every 15 minutes on shift each employee gets their rank's pay in the bank (Trainee $1,500, Staff $2,000, Manager $3,000, Owner $4,000 by default), paid from the business account. Set in `Config.Paycheck`.
 - **Boss desk** — balance, deposit / withdraw, money log, team, hiring, supplier orders paid from the business account and delivered to the fridge.
 - **Cooking** — each station shows what it can make, what you have and what's missing. Cook up to 10 at once. Walk away or cancel and the ingredients come back.
 - **Cash register** — bill a customer at the counter; they pay cash or bank from a receipt pop-up. The employee gets a commission.

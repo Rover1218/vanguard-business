@@ -103,6 +103,12 @@ function Rules.splitBill(amount, commissionPercent)
     return amount - commission, commission
 end
 
+--- Paycheck for a rank from the config table; 0 for unknown ranks or anything but a whole amount >= 0.
+function Rules.paycheckFor(amounts, rank)
+    if type(amounts) ~= 'table' or rank == nil then return 0 end
+    return Rules.wholeNumber(amounts[rank], 0, 1000000000) or 0
+end
+
 function Rules.cookTime(recipe, quantity)
     return recipe.time * quantity
 end

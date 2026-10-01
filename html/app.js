@@ -295,7 +295,18 @@ function renderBossStaff(p) {
 
     return el('div', { class: 'stack' },
         section('Team', el('ul', { class: 'rows' }, rows)),
+        p.paychecks ? renderPaychecks(p) : null,
         canHire && ranks.length ? renderHireForm(p, ranks) : null);
+}
+
+function renderPaychecks(p) {
+    const { amounts, minutes, fromBusiness } = p.paychecks;
+    return section('Paychecks',
+        // Lua sends rank 1-4 amounts as a JSON array (0-based); a config with gaps arrives as an object
+        el('div', { class: 'stats' }, p.ranks.map((label, index) => stat(label,
+            money((Array.isArray(amounts) ? amounts[index] : amounts[index + 1]) || 0),
+            index + 1 === p.rank ? 'is-accent' : ''))),
+        el('p', { class: 'hint', text: `Paid into the bank every ${minutes} minutes while clocked in${fromBusiness ? ', out of the business account' : ''}.` }));
 }
 
 function renderHireForm(p, ranks) {
@@ -501,6 +512,7 @@ const Preview = {
         business: { id: 1, name: 'Cat Café', typeLabel: 'Cat café', balance: 18450 },
         permissions: { cook: true, fridge: true, doors: true, register: true, supplier: true, hire: true, log: true, withdraw: true },
         ranks: ['Trainee', 'Staff', 'Manager', 'Owner'], onDuty: 2, canPlace: true, maxPacks: 50, maxTransaction: 1000000,
+        paychecks: { amounts: { 1: 1500, 2: 2000, 3: 3000, 4: 4000 }, minutes: 15, fromBusiness: true },
         staff: [
             { identifier: 'ROV123', name: 'Rover Op', rank: 4, online: true, onDuty: true, isMe: true },
             { identifier: 'MIA555', name: 'Mia Tanaka', rank: 3, online: true, onDuty: true },

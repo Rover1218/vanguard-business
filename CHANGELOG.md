@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0 — 2026-10-01
+
+- Paychecks per rank every `Config.Paycheck.IntervalMinutes` on shift (default Trainee $1,500 / Staff $2,000 / Manager $3,000 / Owner $4,000 every 15 min), paid from the business account; shown on the boss desk Staff tab and in the money log.
+
 ## 1.0.1 — 2026-10-01
 
 - Doors: staff lock / unlock with E; locks re-applied continuously; doors the game already registered are taken over; a locked door is also turned back to its closed heading and frozen, so it stays shut for everyone. New heading column on `vbiz_doors` (added automatically).

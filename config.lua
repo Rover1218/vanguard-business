@@ -46,6 +46,21 @@ Config.Ranks = {
     { label = 'Owner' },
 }
 
+-- Paychecks: every IntervalMinutes on shift (clocked in), each employee gets their rank's amount in
+-- the bank. FromBusiness = true pays it out of the business account (skipped, with a message, when
+-- the business can't afford it); false = the server pays it (free money, like a city job).
+Config.Paycheck = {
+    Enabled = true,
+    IntervalMinutes = 15,
+    FromBusiness = true,
+    Amounts = {
+        [1] = 1500, -- Trainee
+        [2] = 2000, -- Staff
+        [3] = 3000, -- Manager
+        [4] = 4000, -- Owner
+    },
+}
+
 Config.RankPermissions = {
     [1] = { cook = true, fridge = true, doors = true },
     [2] = { cook = true, fridge = true, doors = true, register = true },

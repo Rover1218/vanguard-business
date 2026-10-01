@@ -45,6 +45,11 @@ Router.on('bossData', function(src, data)
         maxPacks = Config.MaxPacksPerLine,
         maxTransaction = Config.MaxTransaction,
         canPlace = Access.canPlace(src, business.id),
+        paychecks = Config.Paycheck.Enabled and {
+            amounts = Config.Paycheck.Amounts,
+            minutes = Config.Paycheck.IntervalMinutes,
+            fromBusiness = Config.Paycheck.FromBusiness,
+        } or nil,
     })
 end)
 

@@ -5,7 +5,7 @@ lua54 'yes'
 name 'vanguard-business'
 author 'Rover'
 description 'Vanguard Business - player-run food businesses for QBCore, Qbox and ESX'
-version '1.0.1'
+version '1.1.0'
 
 ui_page 'html/index.html'
 
@@ -42,6 +42,7 @@ server_scripts {
     'server/doors.lua',
     'server/register.lua',
     'server/items.lua',
+    'server/payroll.lua',
     'server/main.lua',
 }
 

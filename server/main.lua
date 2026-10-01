@@ -38,6 +38,7 @@ end)
 --- bills and eating. Runs on disconnect and on character logout, so nothing carries to another character.
 local function endSession(src)
     StaffList.setDuty(src, nil)
+    Payroll.reset(src)
     Cooking.drop(src)
     Register.drop(src)
     Items.drop(src)

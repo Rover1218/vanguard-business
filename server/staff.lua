@@ -96,6 +96,13 @@ function StaffList.dutyOf(src)
     return duty[src]
 end
 
+--- Copy of { [server id] = businessId } for everyone on shift.
+function StaffList.onDuty()
+    local copy = {}
+    for src, businessId in pairs(duty) do copy[src] = businessId end
+    return copy
+end
+
 function StaffList.onDutyCount(businessId)
     local count = 0
     for _, id in pairs(duty) do
