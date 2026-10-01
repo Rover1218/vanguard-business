@@ -9,6 +9,7 @@ Doors = { byId = {}, hashes = {}, zones = {}, adopted = {} }
 local STATE_UNLOCKED, STATE_LOCKED, STATE_FORCE_LOCKED = 0, 1, 4
 local OPEN_TOLERANCE = 0.02     -- open ratio below this counts as shut
 local HEADING_TOLERANCE = 1.0   -- degrees off the closed heading before a locked door is turned back
+local SLIDE_TOLERANCE = 0.3     -- metres a sliding door / shutter may be off its saved spot and still count as shut
 local ENFORCE_INTERVAL_MS = 250
 local ENFORCE_RANGE = 30.0
 local TOGGLE_COOLDOWN_MS = 600
@@ -58,6 +59,13 @@ local function hold(door)
     local entity = doorEntity(door)
     if entity == 0 then frozen[door.id] = nil return end
     if not door.locked then return release(door.id) end
+    -- Sliding doors and roll-up shutters move instead of turning: only freeze them once the door
+    -- system has brought them back to their shut position, never while still raised / open.
+    if #(GetEntityCoords(entity) - vector3(door.x, door.y, door.z)) > SLIDE_TOLERANCE then
+        release(door.id)
+        DoorSystemSetOpenRatio(Doors.hashes[door.id], 0.0, false, false)
+        return
+    end
 
     local heading = closedHeading(door, entity)
     if not heading then return end
