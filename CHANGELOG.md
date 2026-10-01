@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 — 2026-10-01
+
+- Doors: staff lock / unlock with E; locks re-applied continuously; doors the game already registered are taken over; a locked door is also turned back to its closed heading and frozen, so it stays shut for everyone. New heading column on `vbiz_doors` (added automatically).
+- Placement mode shows each door's status.
+
 ## 1.0.0 — 2026-09-30
 
 First release.

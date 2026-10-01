@@ -207,7 +207,7 @@ Router.on('addDoor', function(src, data)
         if partner and partner.businessId == business.id and not partner.pairId then pairId = partner.id end
     end
 
-    local door = Stations.addDoor(business.id, model, coords, pairId)
+    local door = Stations.addDoor(business.id, model, coords, pairId, Rules.heading(data.heading))
     if not door then return Router.fail('Could not save the door') end
     Stations.broadcast()
     return Router.ok(pairId and 'Double door linked and locked' or 'Door added and locked', { id = door.id })

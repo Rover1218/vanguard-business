@@ -10,10 +10,10 @@ function Stations.load()
     for _, row in ipairs(MySQL.query.await('SELECT id, business_id, kind, x, y, z, heading FROM vbiz_stations') or {}) do
         stations[row.id] = { id = row.id, businessId = row.business_id, kind = row.kind, x = row.x, y = row.y, z = row.z, heading = row.heading }
     end
-    for _, row in ipairs(MySQL.query.await('SELECT id, business_id, model, x, y, z, pair_id, locked FROM vbiz_doors') or {}) do
+    for _, row in ipairs(MySQL.query.await('SELECT id, business_id, model, x, y, z, pair_id, locked, heading FROM vbiz_doors') or {}) do
         doors[row.id] = {
             id = row.id, businessId = row.business_id, model = row.model, x = row.x, y = row.y, z = row.z,
-            pairId = row.pair_id, locked = row.locked == 1 or row.locked == true,
+            pairId = row.pair_id, locked = row.locked == 1 or row.locked == true, heading = row.heading,
         }
     end
 end
@@ -39,12 +39,16 @@ function Stations.remove(id)
     stations[id] = nil
 end
 
---- Adds a door (locked). pairId links it to an existing door of the same business (double doors).
-function Stations.addDoor(businessId, model, coords, pairId)
-    local id = MySQL.insert.await('INSERT INTO vbiz_doors (business_id, model, x, y, z, pair_id, locked) VALUES (?, ?, ?, ?, ?, ?, 1)',
-        { businessId, model, coords.x, coords.y, coords.z, pairId })
+--- Adds a door (locked). pairId links it to an existing door of the same business (double doors);
+--- heading is the door's closed heading (where a locked door is held).
+function Stations.addDoor(businessId, model, coords, pairId, heading)
+    local id = MySQL.insert.await('INSERT INTO vbiz_doors (business_id, model, x, y, z, pair_id, locked, heading) VALUES (?, ?, ?, ?, ?, ?, 1, ?)',
+        { businessId, model, coords.x, coords.y, coords.z, pairId, heading })
     if not id then return nil end
-    doors[id] = { id = id, businessId = businessId, model = model, x = coords.x, y = coords.y, z = coords.z, pairId = pairId, locked = true }
+    doors[id] = {
+        id = id, businessId = businessId, model = model, x = coords.x, y = coords.y, z = coords.z,
+        pairId = pairId, locked = true, heading = heading,
+    }
     if pairId and doors[pairId] then
         MySQL.update.await('UPDATE vbiz_doors SET pair_id = ?, locked = 1 WHERE id = ?', { id, pairId })
         doors[pairId].pairId = id

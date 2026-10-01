@@ -83,6 +83,7 @@ local function addDoor(entity)
     local result = Client.request('addDoor', {
         businessId = Placement.data.business.id, model = GetEntityModel(entity),
         coords = { x = coords.x, y = coords.y, z = coords.z }, pairWith = pairWith,
+        heading = GetEntityHeading(entity), -- add doors while they are shut: this is where a locked door is held
     })
     Client.report(result)
     if result.ok then

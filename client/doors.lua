@@ -1,16 +1,21 @@
--- Vanguard Business - door locks. Doors are registered with the game's door system; the locked
--- state comes from the server and is re-applied while you are near, so nothing can leave a
--- locked door swinging. Staff lock / unlock with E (or third-eye when Config.DoorsUseTarget).
+-- Vanguard Business - door locks. Two layers keep a locked door shut for everyone (staff too):
+--   1. the game's door system (locked state from the server, re-applied while you are near), and
+--   2. the door object itself is turned back to its closed heading and frozen while locked - this
+--      also holds doors that an interior or the game's own door list won't let the door system lock.
+-- Staff lock / unlock with E (or third-eye when Config.DoorsUseTarget).
 
 Doors = { byId = {}, hashes = {}, zones = {}, adopted = {} }
 
 local STATE_UNLOCKED, STATE_LOCKED, STATE_FORCE_LOCKED = 0, 1, 4
-local OPEN_TOLERANCE = 0.02 -- open ratio below this counts as shut
-local ENFORCE_INTERVAL_MS = 1000
+local OPEN_TOLERANCE = 0.02     -- open ratio below this counts as shut
+local HEADING_TOLERANCE = 1.0   -- degrees off the closed heading before a locked door is turned back
+local ENFORCE_INTERVAL_MS = 250
 local ENFORCE_RANGE = 30.0
 local TOGGLE_COOLDOWN_MS = 600
 
 local busy = false
+local frozen = {}          -- door id -> door object we froze
+local firstSeenHeading = {} -- door id -> heading when first seen shut (doors saved before 1.0.1 have none)
 
 local function hasKey(door)
     return Client.jobs[door.businessId] ~= nil or Client.admin
@@ -29,6 +34,41 @@ local function applyState(id)
     end
 end
 
+local function doorEntity(door)
+    return GetClosestObjectOfType(door.x, door.y, door.z, 1.0, door.model, false, false, false)
+end
+
+--- Where a locked door is held: the saved closed heading, else the heading it had when first seen shut.
+local function closedHeading(door, entity)
+    if door.heading then return door.heading end
+    if not firstSeenHeading[door.id] then
+        local shut = door.locked or math.abs(DoorSystemGetOpenRatio(Doors.hashes[door.id] or 0)) < OPEN_TOLERANCE
+        if shut then firstSeenHeading[door.id] = GetEntityHeading(entity) end
+    end
+    return firstSeenHeading[door.id]
+end
+
+local function release(id)
+    if frozen[id] and DoesEntityExist(frozen[id]) then FreezeEntityPosition(frozen[id], false) end
+    frozen[id] = nil
+end
+
+--- Layer 2: turn a locked door back to shut and freeze it; let an unlocked door move freely.
+local function hold(door)
+    local entity = doorEntity(door)
+    if entity == 0 then frozen[door.id] = nil return end
+    if not door.locked then return release(door.id) end
+
+    local heading = closedHeading(door, entity)
+    if not heading then return end
+    local off = math.abs((GetEntityHeading(entity) - heading + 180.0) % 360.0 - 180.0)
+    if off > HEADING_TOLERANCE then SetEntityHeading(entity, heading) end
+    if frozen[door.id] ~= entity then
+        FreezeEntityPosition(entity, true)
+        frozen[door.id] = entity
+    end
+end
+
 --- For placement mode: 'locked' / 'open', or a problem to fix ('no door here', 'not locking').
 function Doors.status(id)
     local door, hash = Doors.byId[id], Doors.hashes[id]
@@ -40,8 +80,9 @@ function Doors.status(id)
     if GetClosestObjectOfType(door.x, door.y, door.z, 1.0, door.model, false, false, false) == 0 then
         return 'NO DOOR HERE - delete and re-add'
     end
+    if door.locked and frozen[id] then return 'locked' end
     local wanted = door.locked and STATE_LOCKED or STATE_UNLOCKED
-    if DoorSystemGetDoorState(hash) ~= wanted then return 'NOT LOCKING - delete and re-add' end
+    if DoorSystemGetDoorState(hash) ~= wanted then return 'NOT LOCKING - delete and re-add (while shut)' end
     return door.locked and 'locked' or 'open'
 end
 
@@ -68,6 +109,7 @@ local function toggle(door)
 end
 
 local function clear()
+    for id in pairs(frozen) do release(id) end
     for id, hash in pairs(Doors.hashes) do
         if Doors.adopted[id] then
             DoorSystemSetDoorState(hash, STATE_UNLOCKED, false, false) -- the game's own door: just unlock it
@@ -114,6 +156,7 @@ RegisterNetEvent('vanguard-business:doorState', function(ids, locked)
         if Doors.byId[id] then
             Doors.byId[id].locked = locked
             applyState(id)
+            hold(Doors.byId[id])
         end
     end
 end)
@@ -129,6 +172,9 @@ CreateThread(function()
                 local wanted = door.locked and STATE_LOCKED or STATE_UNLOCKED
                 local swungOpen = door.locked and math.abs(DoorSystemGetOpenRatio(hash)) > OPEN_TOLERANCE
                 if DoorSystemGetDoorState(hash) ~= wanted or swungOpen then applyState(id) end
+                hold(door)
+            elseif frozen[id] then
+                frozen[id] = nil -- out of range: the object streams out on its own
             end
         end
     end
