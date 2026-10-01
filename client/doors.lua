@@ -15,8 +15,9 @@ local ENFORCE_RANGE = 30.0
 local TOGGLE_COOLDOWN_MS = 600
 
 local busy = false
-local frozen = {}          -- door id -> door object we froze
-local firstSeenHeading = {} -- door id -> heading when first seen shut (doors saved before 1.0.1 have none)
+local frozen = {}       -- door id -> door object we froze
+local lastHandle = {}   -- door id -> object handle last seen; false = seen streamed out; nil = not looked yet
+local spawnHeading = {} -- door id -> heading the door object had when it streamed in (its real shut position)
 
 local function hasKey(door)
     return Client.jobs[door.businessId] ~= nil or Client.admin
@@ -39,14 +40,19 @@ local function doorEntity(door)
     return GetClosestObjectOfType(door.x, door.y, door.z, 1.0, door.model, false, false, false)
 end
 
---- Where a locked door is held: the saved closed heading, else the heading it had when first seen shut.
-local function closedHeading(door, entity)
-    if door.heading then return door.heading end
-    if not firstSeenHeading[door.id] then
-        local shut = door.locked or math.abs(DoorSystemGetOpenRatio(Doors.hashes[door.id] or 0)) < OPEN_TOLERANCE
-        if shut then firstSeenHeading[door.id] = GetEntityHeading(entity) end
-    end
-    return firstSeenHeading[door.id]
+--- Remembers the door's shut heading. Building doors always stream in shut, at their original
+--- rotation, so the heading of a freshly streamed-in door object is its true closed position. A door
+--- that was already on screen when we started watching could be open, so it teaches nothing.
+local function learn(door, entity)
+    if lastHandle[door.id] == entity then return end
+    if lastHandle[door.id] == false then spawnHeading[door.id] = GetEntityHeading(entity) end
+    lastHandle[door.id] = entity
+end
+
+--- Where a locked door is held: its streamed-in heading, else the heading saved when it was added.
+--- Unknown = nil: then the door is never frozen (the door system alone keeps it locked).
+local function closedHeading(door)
+    return spawnHeading[door.id] or door.heading
 end
 
 local function release(id)
@@ -57,7 +63,11 @@ end
 --- Layer 2: turn a locked door back to shut and freeze it; let an unlocked door move freely.
 local function hold(door)
     local entity = doorEntity(door)
-    if entity == 0 then frozen[door.id] = nil return end
+    if entity == 0 then
+        frozen[door.id], lastHandle[door.id] = nil, false
+        return
+    end
+    learn(door, entity)
     if not door.locked then return release(door.id) end
     -- Sliding doors and roll-up shutters move instead of turning: only freeze them once the door
     -- system has brought them back to their shut position, never while still raised / open.
@@ -67,7 +77,7 @@ local function hold(door)
         return
     end
 
-    local heading = closedHeading(door, entity)
+    local heading = closedHeading(door)
     if not heading then return end
     local off = math.abs((GetEntityHeading(entity) - heading + 180.0) % 360.0 - 180.0)
     if off > HEADING_TOLERANCE then SetEntityHeading(entity, heading) end
@@ -181,8 +191,9 @@ CreateThread(function()
                 local swungOpen = door.locked and math.abs(DoorSystemGetOpenRatio(hash)) > OPEN_TOLERANCE
                 if DoorSystemGetDoorState(hash) ~= wanted or swungOpen then applyState(id) end
                 hold(door)
-            elseif frozen[id] then
-                frozen[id] = nil -- out of range: the object streams out on its own
+            elseif lastHandle[id] ~= false then
+                -- out of range: once the object has streamed out, its next appearance is a fresh, shut door
+                if doorEntity(door) == 0 then frozen[id], lastHandle[id] = nil, false end
             end
         end
     end
