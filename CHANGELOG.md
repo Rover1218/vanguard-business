@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0 — 2026-10-09
+
+- Shifts survive a restart of the resource (kept on the player's state bag with the minutes worked), so restarting no longer clocks everyone out silently.
+- Clock-ins, clock-outs and every paycheck (or why it was skipped) are printed to the server console.
+- Clocking in shows the paycheck amount and interval.
+- Food and drink stay usable after restarting only this resource (QBCore keeps runtime items until a full restart).
+- The boss desk no longer offers "Place stations"; admins place from `/business`, Owners only when `Config.OwnersCanPlace = true`.
+- `Config.Paycheck.FromBusiness` documented: `true` pays from the business account (default), `false` lets the city pay.
+
 ## 1.1.0 — 2026-10-01
 
 - Paychecks per rank every `Config.Paycheck.IntervalMinutes` on shift (default Trainee $1,500 / Staff $2,000 / Manager $3,000 / Owner $4,000 every 15 min), paid from the business account; shown on the boss desk Staff tab and in the money log.
