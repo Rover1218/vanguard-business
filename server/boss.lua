@@ -207,6 +207,7 @@ Router.on('clock', function(src, data)
     if StaffList.dutyOf(src) == ctx.business.id then
         StaffList.setDuty(src, nil)
         message = ('Clocked out of %s'):format(ctx.business.name)
+        Router.log(src, ('clocked out of %s'):format(ctx.business.name))
     else
         StaffList.setDuty(src, ctx.business.id)
         message = ('Clocked in at %s'):format(ctx.business.name)
@@ -214,6 +215,7 @@ Router.on('clock', function(src, data)
         if Config.Paycheck.Enabled and pay > 0 then
             message = ('%s - $%d paycheck every %d min while clocked in'):format(message, pay, Config.Paycheck.IntervalMinutes)
         end
+        Router.log(src, ('clocked in at %s'):format(ctx.business.name))
     end
     Access.sendJobs(src)
     return Router.ok(message)

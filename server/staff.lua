@@ -88,8 +88,36 @@ function StaffList.setOwner(businessId, identifier, name)
     return previous ~= identifier and previous or nil
 end
 
+-- Shift state is also kept on the player's state bag, which outlives a restart of this resource,
+-- so restarting it doesn't silently clock everyone out (see StaffList.restoreDuty).
+function StaffList.remember(src, key, value)
+    pcall(function() Player(src).state:set(key, value, false) end)
+end
+
+function StaffList.recall(src, key)
+    local ok, value = pcall(function() return Player(src).state[key] end)
+    if ok then return value end
+    return nil
+end
+
 function StaffList.setDuty(src, businessId)
+    if duty[src] ~= businessId then StaffList.remember(src, 'vbizShiftMinutes', 0) end
     duty[src] = businessId
+    StaffList.remember(src, 'vbizDuty', businessId or false)
+end
+
+--- After this resource restarts: puts players who were on shift back on shift. Returns how many.
+function StaffList.restoreDuty()
+    local restored = 0
+    for _, id in ipairs(GetPlayers()) do
+        local src = tonumber(id)
+        local businessId = StaffList.recall(src, 'vbizDuty')
+        if businessId and StaffList.rankOf(businessId, Bridge.identifier(src)) then
+            duty[src] = businessId
+            restored = restored + 1
+        end
+    end
+    return restored
 end
 
 function StaffList.dutyOf(src)

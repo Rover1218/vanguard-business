@@ -17,6 +17,9 @@ CreateThread(function()
     for _, business in ipairs(Businesses.all()) do Businesses.registerStash(business) end
     Items.register()
 
+    local restored = StaffList.restoreDuty()
+    if restored > 0 then print(('[vanguard-business] %d player(s) kept on shift after the restart'):format(restored)) end
+
     Bridge.ready = true
     Stations.broadcast()
     for _, id in ipairs(GetPlayers()) do Access.sendJobs(tonumber(id)) end
