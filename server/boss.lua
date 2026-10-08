@@ -210,6 +210,10 @@ Router.on('clock', function(src, data)
     else
         StaffList.setDuty(src, ctx.business.id)
         message = ('Clocked in at %s'):format(ctx.business.name)
+        local pay = Rules.paycheckFor(Config.Paycheck.Amounts, ctx.rank)
+        if Config.Paycheck.Enabled and pay > 0 then
+            message = ('%s - $%d paycheck every %d min while clocked in'):format(message, pay, Config.Paycheck.IntervalMinutes)
+        end
     end
     Access.sendJobs(src)
     return Router.ok(message)
