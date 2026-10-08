@@ -218,6 +218,12 @@ function Bridge.addItemDefinition(name, definition)
     return (exports['qb-core']:AddItem(name, definition)) == true
 end
 
+--- The item definition QBCore currently has for name (nil if none, or not QBCore).
+function Bridge.existingItem(name)
+    if Bridge.inventory ~= 'qb' then return nil end
+    return core.Shared.Items[name]
+end
+
 function Bridge.createUsable(name, callback)
     core.Functions.CreateUseableItem(name, function(src) callback(src) end)
 end

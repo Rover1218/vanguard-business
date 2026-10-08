@@ -28,6 +28,8 @@ function Items.register()
     end
 
     local added, kept = 0, 0
+    -- Returns true when the item is ours: added now, or added by this resource before it was restarted
+    -- on its own (QBCore keeps runtime items until the server restarts; recognised by our picture).
     local function add(name, def)
         if Bridge.addItemDefinition(name, def) then
             addedDefinitions[name] = def
@@ -35,6 +37,11 @@ function Items.register()
             return true
         end
         kept = kept + 1
+        local existing = Bridge.existingItem(name)
+        if existing and existing.image == def.image then
+            addedDefinitions[name] = existing
+            return true
+        end
         return false
     end
     for name, item in pairs(Ingredients) do add(name, definition(name, item, false)) end
@@ -44,7 +51,9 @@ function Items.register()
         end
     end
     Bridge.refreshCore()
-    print(('[vanguard-business] items: %d added, %d already existed and were kept'):format(added, kept))
+    local ours = 0
+    for _ in pairs(addedDefinitions) do ours = ours + 1 end
+    print(('[vanguard-business] items: %d added, %d already existed and were kept (%d of ours, usable)'):format(added, kept, ours))
 end
 
 --- QBCore only sends runtime-added items to players online at that moment; this covers later joins.
