@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0 — 2026-10-09
+
+- Leaving work on shift: an employee who goes more than `Config.AutoClockOutDistance` (default 2,000 m) from every station of their business is clocked out automatically, with a message and a console log line. Set it to 0 to turn it off.
+
 ## 1.2.0 — 2026-10-09
 
 - Shifts survive a restart of the resource (kept on the player's state bag with the minutes worked), so restarting no longer clocks everyone out silently.

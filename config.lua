@@ -46,6 +46,10 @@ Config.Ranks = {
     { label = 'Owner' },
 }
 
+-- Leaving work on shift: someone clocked in who goes further than this many metres from every
+-- station of their business is clocked out automatically (0 = never).
+Config.AutoClockOutDistance = 2000
+
 -- Paychecks: every IntervalMinutes on shift (clocked in), each employee gets their rank's amount in
 -- the bank. FromBusiness = true pays it out of the business account (skipped, with a message, when
 -- the business can't afford it); false = the server pays it (free money, like a city job).

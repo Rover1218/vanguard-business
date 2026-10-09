@@ -109,6 +109,18 @@ function Rules.paycheckFor(amounts, rank)
     return Rules.wholeNumber(amounts[rank], 0, 1000000000) or 0
 end
 
+--- Distance from pos to the closest of points (tables with x, y, z); nil when there are none.
+function Rules.nearestDistance(pos, points)
+    if type(pos) ~= 'table' or type(points) ~= 'table' then return nil end
+    local nearest
+    for _, point in ipairs(points) do
+        local dx, dy, dz = point.x - pos.x, point.y - pos.y, point.z - pos.z
+        local distance = math.sqrt(dx * dx + dy * dy + dz * dz)
+        if not nearest or distance < nearest then nearest = distance end
+    end
+    return nearest
+end
+
 function Rules.cookTime(recipe, quantity)
     return recipe.time * quantity
 end
