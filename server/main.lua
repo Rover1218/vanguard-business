@@ -19,6 +19,7 @@ CreateThread(function()
 
     local restored = StaffList.restoreDuty()
     if restored > 0 then print(('[vanguard-business] %d player(s) kept on shift after the restart'):format(restored)) end
+    BankLink.moveBalances()
 
     Bridge.ready = true
     Stations.broadcast()
@@ -64,4 +65,9 @@ end)
 
 AddEventHandler('esx:playerLogout', function(src)
     if isOwnLogout(source, src) then endSession(tonumber(src)) end
+end)
+
+-- Vanguard Bank started after us: move any money still in the balance column into the bank.
+AddEventHandler('onResourceStart', function(name)
+    if name == 'vanguard-bank' and Bridge.ready then SetTimeout(2000, BankLink.moveBalances) end
 end)

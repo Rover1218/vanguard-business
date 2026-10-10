@@ -11,7 +11,7 @@ local function businessView(business)
     return {
         id = business.id, name = business.name, type = business.type,
         typeLabel = (BusinessTypes[business.type] or {}).label or business.type,
-        balance = business.balance, owner = ownerName, staff = StaffList.count(business.id),
+        balance = Businesses.balance(business.id), owner = ownerName, staff = StaffList.count(business.id),
         onDuty = StaffList.onDutyCount(business.id), stations = #placed.stations, doors = #placed.doors,
         hasBlip = business.blip ~= nil,
         teleport = (first and { x = first.x, y = first.y, z = first.z }) or business.blip,

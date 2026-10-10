@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0 — 2026-10-10
+
+- Works with Vanguard Bank: when `vanguard-bank` runs, business money lives in the business's Business account in the bank (any old balance is moved over once). The boss desk, paychecks, supplier orders and sales use it, Owners and Managers can use it at any bank branch, and bank movements appear in the boss desk money log. Without Vanguard Bank nothing changes.
+
 ## 1.3.0 — 2026-10-09
 
 - Leaving work on shift: an employee who goes more than `Config.AutoClockOutDistance` (default 2,000 m) from every station of their business is clocked out automatically, with a message and a console log line. Set it to 0 to turn it off.

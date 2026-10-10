@@ -27,13 +27,13 @@ local function pay(src, businessId)
     local name = Bridge.characterName(src)
     local fromBusiness = Config.Paycheck.FromBusiness
 
-    if fromBusiness and not Businesses.adjust(businessId, -amount) then
+    if fromBusiness and not Businesses.adjust(businessId, -amount, ('Paycheck: %s'):format(name)) then
         log('paycheck $%d for %s (%s) skipped: %s can\'t afford it', amount, name, src, business.name)
         Access.notify(src, ('%s couldn\'t afford your $%d paycheck - tell the owner'):format(business.name, amount), false)
         return
     end
     if not Bridge.addMoney(src, 'bank', amount, 'vanguard-business paycheck') then
-        if fromBusiness then Businesses.adjust(businessId, amount) end
+        if fromBusiness then Businesses.adjust(businessId, amount, 'Paycheck refund') end
         log('paycheck $%d for %s (%s) failed: the framework refused the payment', amount, name, src)
         return
     end

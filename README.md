@@ -12,6 +12,7 @@ Works with **QBCore**, **Qbox** and **ESX** (auto-detected). Companion to Vangua
 - **Placement tool** — aim and click to place the fridge, cooking stations, cash register, boss desk, clock-in point, doors (incl. double doors) and a map icon. Move or delete them the same way.
 - **Staff & ranks** — Trainee, Staff, Manager, Owner, each with its own permissions (`config.lua`). You can only hire, fire or promote people below you. Clock in to work.
 - **Paychecks** — every 15 minutes on shift each employee gets their rank's pay in the bank (Trainee $1,500, Staff $2,000, Manager $3,000, Owner $4,000 by default), paid out of the business account (set `Config.Paycheck.FromBusiness = false` to have the city pay instead). Set in `Config.Paycheck`.
+- **Vanguard Bank** — with `vanguard-bank` installed, business money lives in a Business account at the bank (Owners and Managers use it at any branch); without it the business keeps its own balance.
 - **Auto clock-out** — go more than 2 km from your business while clocked in and you're clocked out automatically (`Config.AutoClockOutDistance`, 0 = off).
 - **Boss desk** — balance, deposit / withdraw, money log, team, hiring, supplier orders paid from the business account and delivered to the fridge.
 - **Cooking** — each station shows what it can make, what you have and what's missing. Cook up to 10 at once. Walk away or cancel and the ingredients come back.

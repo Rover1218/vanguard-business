@@ -5,7 +5,7 @@ lua54 'yes'
 name 'vanguard-business'
 author 'Rover'
 description 'Vanguard Business - player-run food businesses for QBCore, Qbox and ESX'
-version '1.3.0'
+version '1.4.0'
 
 ui_page 'html/index.html'
 
@@ -30,6 +30,7 @@ server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'bridge/server.lua',
     'server/db.lua',
+    'server/banklink.lua',
     'server/businesses.lua',
     'server/staff.lua',
     'server/stations.lua',

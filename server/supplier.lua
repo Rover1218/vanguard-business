@@ -7,7 +7,7 @@ Router.on('order', function(src, data)
 
     local total, lines = Rules.cartTotal(Types.catalog(business.type), data.cart, Config.MaxPacksPerLine)
     if not total then return Router.fail(lines) end
-    if not Businesses.adjust(business.id, -total) then
+    if not Businesses.adjust(business.id, -total, 'Supplier order') then
         return Router.fail(('The business can\'t afford this order ($%d)'):format(total))
     end
 
@@ -21,7 +21,7 @@ Router.on('order', function(src, data)
             failed[#failed + 1] = Types.itemLabel(line.item)
         end
     end
-    if refund > 0 then Businesses.adjust(business.id, refund) end
+    if refund > 0 then Businesses.adjust(business.id, refund, 'Supplier refund') end
 
     local spent = total - refund
     if spent > 0 then

@@ -33,7 +33,7 @@ Router.on('bossData', function(src, data)
         business = {
             id = business.id, name = business.name,
             typeLabel = (BusinessTypes[business.type] or {}).label or business.type,
-            balance = permissions.log and business.balance or nil,
+            balance = permissions.log and Businesses.balance(business.id) or nil,
         },
         rank = ctx.rank,
         permissions = permissions,
@@ -91,7 +91,7 @@ Router.on('deposit', function(src, data)
     if not Bridge.removeMoney(src, 'cash', amount, 'vanguard-business deposit') then
         return Router.fail('You don\'t have that much cash')
     end
-    if not Businesses.adjust(ctx.business.id, amount) then
+    if not Businesses.adjust(ctx.business.id, amount, 'Boss desk deposit') then
         Bridge.addMoney(src, 'cash', amount, 'vanguard-business deposit refund')
         return Router.fail('Could not deposit, your cash was returned')
     end
@@ -105,9 +105,9 @@ Router.on('withdraw', function(src, data)
     local amount = Rules.wholeNumber(data.amount, 1, Config.MaxTransaction)
     if not amount then return Router.fail(('Enter an amount from $1 to $%d'):format(Config.MaxTransaction)) end
 
-    if not Businesses.adjust(ctx.business.id, -amount) then return Router.fail('The business doesn\'t have that much') end
+    if not Businesses.adjust(ctx.business.id, -amount, 'Boss desk withdrawal') then return Router.fail('The business doesn\'t have that much') end
     if not Bridge.addMoney(src, 'cash', amount, 'vanguard-business withdraw') then
-        Businesses.adjust(ctx.business.id, amount)
+        Businesses.adjust(ctx.business.id, amount, 'Refund')
         return Router.fail('Could not pay you, the money stays in the business')
     end
     Businesses.log(ctx.business.id, 'withdraw', -amount, Bridge.characterName(src), nil)

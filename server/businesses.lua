@@ -62,10 +62,12 @@ function Businesses.delete(id)
     cache[id] = nil
 end
 
---- Adds delta (negative to spend) unless the balance would drop below zero.
---- Atomic in SQL, so two people spending at once can never overdraw.
---- Never throws: a database error counts as "not changed" so callers can refund.
-function Businesses.adjust(id, delta)
+--- Adds delta (negative to spend) unless the balance would drop below zero. In the bank when
+--- Vanguard Bank runs, else atomic SQL here, so two people spending at once can never overdraw.
+--- Never throws: an error counts as "not changed" so callers can refund.
+function Businesses.adjust(id, delta, note)
+    local business = cache[id]
+    if business and BankLink.active() then return BankLink.adjust(business, delta, note) end
     local ok, changed = pcall(MySQL.update.await,
         'UPDATE vbiz_businesses SET balance = balance + ? WHERE id = ? AND balance + ? >= 0',
         { delta, id, delta })
@@ -74,9 +76,16 @@ function Businesses.adjust(id, delta)
         return false
     end
     if changed ~= 1 then return false end
-    local business = cache[id]
     if business then business.balance = business.balance + delta end
     return true
+end
+
+--- The business's money: its bank account balance with Vanguard Bank, else the column.
+function Businesses.balance(id)
+    local business = cache[id]
+    if not business then return 0 end
+    if BankLink.active() then return BankLink.balance(business) end
+    return business.balance
 end
 
 function Businesses.log(id, kind, amount, actor, note)

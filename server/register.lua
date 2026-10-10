@@ -90,12 +90,12 @@ Router.on('billAnswer', function(src, data)
     -- The business is credited first; if that fails the customer gets their money back.
     local share, commission = Rules.splitBill(bill.amount, Config.CommissionPercent)
     if commission == 0 or not billerEarnsCommission(bill) then share, commission = bill.amount, 0 end
-    if not Businesses.adjust(bill.businessId, share) then
+    if not Businesses.adjust(bill.businessId, share, ('Sale: %s'):format(bill.note or 'bill')) then
         Bridge.addMoney(src, method, bill.amount, 'vanguard-business bill refund')
         return Router.fail('The payment failed - your money was returned')
     end
     if commission > 0 and not Bridge.addMoney(bill.from, 'bank', commission, 'vanguard-business commission') then
-        Businesses.adjust(bill.businessId, commission)
+        Businesses.adjust(bill.businessId, commission, 'Commission returned')
         share, commission = bill.amount, 0
     end
     Businesses.log(bill.businessId, 'sale', share, bill.fromName, bill.note)
