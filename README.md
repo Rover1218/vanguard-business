@@ -4,6 +4,11 @@ Player-run food businesses for FiveM — cafés, burger bars, pizzerias, bakerie
 
 Works with **QBCore**, **Qbox** and **ESX** (auto-detected). Companion to Vanguard Admin.
 
+<p align="center">
+  <a href="docs/launch-video.mp4"><img src="docs/launch-preview.gif" alt="Vanguard Business launch video (20 s)" width="100%"></a>
+</p>
+<p align="center"><a href="docs/launch-video.mp4"><b>▶ Watch the launch video with sound</b></a> · 20 s · MP4</p>
+
 ![Cooking](docs/cook.png)
 
 ## Features
